@@ -1,0 +1,197 @@
+@import 'tailwindcss';
+@import './animations.css';
+
+@import './fonts.css';
+
+/* Arabic-script / Latin-script variants, driven by the inherited lang attribute. */
+@custom-variant ar (&:lang(ar));
+@custom-variant latin (&:not(:lang(ar)));
+
+/* ───────────────────────────── Design tokens ───────────────────────────── */
+@theme {
+  /* Brand palette */
+  --color-ivory: #f8f1e9;
+  --color-cream: #f1e5da;
+  --color-navy: #172343;
+  --color-gold: #b99a66;
+  --color-light-gold: #dcc9a6;
+  --color-text: #343343;
+
+  /* Supporting tones */
+  --color-paper: #fbf7f1;
+  --color-champagne: #ebdcc6;
+  --color-gold-ink: #84663a; /* gold for text: 4.7:1 on ivory */
+  --color-navy-soft: #24325a;
+  --color-sage: #9aa38b;
+
+  /* Families — each stack falls back to the other script's face. */
+  --font-arabic: 'Amiri', 'Cormorant Garamond', 'Times New Roman', serif;
+  --font-arabic-display: 'Aref Ruqaa', 'Amiri', 'Cormorant Garamond', serif;
+  --font-serif: 'Cormorant Garamond', 'Amiri', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Jost', 'Amiri', ui-sans-serif, system-ui, sans-serif;
+
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-silk: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ──────────────────────────────── Base ──────────────────────────────────── */
+@layer base {
+  html {
+    /* Reserve the scrollbar's space so nothing shifts when the opening
+       card releases the scroll lock (desktop browsers). */
+    scrollbar-gutter: stable;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    background: var(--color-ivory);
+    color: var(--color-text);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    min-height: 100svh;
+    overflow-x: clip;
+    font-family: var(--font-serif);
+    font-size: 1.1875rem;
+    line-height: 1.65;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-kerning: normal;
+    /* Cormorant defaults to old-style figures; lining figures keep times
+       such as 17h00 and 5:00 PM unambiguous. */
+    font-variant-numeric: lining-nums;
+  }
+
+  :lang(ar) body,
+  body:lang(ar) {
+    font-family: var(--font-arabic);
+    font-size: 1.1875rem;
+    line-height: 1.95;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-light-gold) 70%, transparent);
+    color: var(--color-navy);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold-ink);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  [id] {
+    scroll-margin-top: 4.5rem;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  img,
+  svg {
+    max-width: none;
+  }
+}
+
+/* ───────────────────────────── Typography ──────────────────────────────── */
+@layer components {
+  /* Display face: Ruqaa calligraphy in Arabic, Cormorant in Latin. */
+  .font-display {
+    font-family: var(--font-serif);
+    font-weight: 300;
+  }
+  .font-display:lang(ar) {
+    font-family: var(--font-arabic-display);
+    font-weight: 400;
+  }
+
+  /* Small caps-style labels; plain Naskh in Arabic. */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--color-gold-ink);
+    line-height: 1.6;
+  }
+  /* Arabic must never be letter-spaced: it breaks the joined script. */
+  .eyebrow:lang(ar) {
+    font-family: var(--font-arabic);
+    font-size: 1.05rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .numerals {
+    font-family: var(--font-serif);
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: 'lnum' 1, 'tnum' 1;
+  }
+
+  .ampersand {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 300;
+    color: var(--color-gold);
+  }
+
+  /* Subtle paper grain, generated as an inline SVG (no extra request). */
+  .paper-grain {
+    position: relative;
+    isolation: isolate;
+  }
+  .paper-grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.32;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .3 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* The invitation card on the opening screen (shared by both door panels). */
+  /* Fixed 9:16 proportions, like a printed card. Its contents are sized in
+     container units (cqw = 1% of the card's width), so everything scales
+     together on any screen. */
+  .card-box {
+    container-type: inline-size;
+    --band-y: 42cqw; /* the satin band's distance from the card's bottom */
+    aspect-ratio: 9 / 16;
+    width: min(86vw, 27rem, 86vh * 0.5625);
+    width: min(86vw, 27rem, 86svh * 0.5625);
+  }
+
+  /* With an opening video, leave room for the button beneath the card. */
+  .card-box-video {
+    width: min(86vw, 27rem, 70vh * 0.5625);
+    width: min(86vw, 27rem, 70svh * 0.5625);
+  }
+
+  .gold-hairline {
+    background: linear-gradient(90deg, transparent, var(--color-gold) 18%, var(--color-gold) 82%, transparent);
+  }
+
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
